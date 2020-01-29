@@ -112,6 +112,7 @@ class Ffmpeg < Formula
       --enable-libfreetype
       --enable-frei0r
       --enable-libass
+      --enable-avresample
       --disable-libjack
       --disable-indev=jack
     ]
