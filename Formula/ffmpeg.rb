@@ -1,14 +1,11 @@
 class Ffmpeg < Formula
   desc "Play, record, convert, and stream audio and video"
   homepage "https://ffmpeg.org/"
-  url "https://ffmpeg.org/releases/ffmpeg-4.2.2.tar.xz"
-  version "4.2.2-with-options" # to distinguish from homebrew-core's ffmpeg
-  sha256 "cb754255ab0ee2ea5f66f8850e1bd6ad5cac1cd855d0a2f4990fb8c668b0d29c"
-  revision 1
+  url "https://ffmpeg.org/releases/ffmpeg-4.3.1.tar.xz"
+  version "4.3.1-with-options" # to distinguish from homebrew-core's ffmpeg
+  sha256 "ad009240d46e307b4e03a213a0f49c11b650e445b1f8be0dda2a9212b34d2ffb"
+  revision 2
   head "https://github.com/FFmpeg/FFmpeg.git"
-
-  # This formula is for people that will compile with their chosen options
-  bottle :unneeded
 
   option "with-chromaprint", "Enable the Chromaprint audio fingerprinting library"
   option "with-decklink", "Enable DeckLink support"
@@ -22,6 +19,7 @@ class Ffmpeg < Formula
   option "with-openh264", "Enable OpenH264 library"
   option "with-openjpeg", "Enable JPEG 2000 image format"
   option "with-openssl", "Enable SSL support"
+  option "with-rav1e", "Enable AV1 encoding via librav1e"
   option "with-rubberband", "Enable rubberband library"
   option "with-webp", "Enable using libwebp to encode WEBP images"
   option "with-zeromq", "Enable using libzeromq to receive cmds sent through a libzeromq client"
@@ -35,6 +33,7 @@ class Ffmpeg < Formula
   depends_on "texi2html" => :build
 
   depends_on "aom"
+  depends_on "dav1d"
   depends_on "fontconfig"
   depends_on "freetype"
   depends_on "frei0r"
@@ -51,13 +50,8 @@ class Ffmpeg < Formula
   depends_on "x265"
   depends_on "xz"
 
-  unless OS.mac?
-    depends_on "zlib"
-    depends_on "bzip2"
-    depends_on "linuxbrew/xorg/libxv"
-  end
+  depends_on "linuxbrew/xorg/libxv" unless OS.mac?
 
-  depends_on "chromaprint" => :optional
   depends_on "fdk-aac" => :optional
   depends_on "game-music-emu" => :optional
   depends_on "libbluray" => :optional
@@ -75,6 +69,7 @@ class Ffmpeg < Formula
   depends_on "openh264" => :optional
   depends_on "openjpeg" => :optional
   depends_on "openssl@1.1" => :optional
+  depends_on "rav1e" => :optional
   depends_on "rtmpdump" => :optional
   depends_on "rubberband" => :optional
   depends_on "speex" => :optional
@@ -87,11 +82,10 @@ class Ffmpeg < Formula
   depends_on "zeromq" => :optional
   depends_on "zimg" => :optional
 
-  def install
-    # Work around Xcode 11 clang bug
-    # https://bitbucket.org/multicoreware/x265/issues/514/wrong-code-generated-on-macos-1015
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
+  uses_from_macos "bzip2"
+  uses_from_macos "zlib"
 
+  def install
     args = %W[
       --prefix=#{prefix}
       --enable-shared
@@ -100,6 +94,7 @@ class Ffmpeg < Formula
       --host-ldflags=#{ENV.ldflags}
       --enable-gpl
       --enable-libaom
+      --enable-libdav1d
       --enable-libmp3lame
       --enable-libopus
       --enable-libsnappy
@@ -113,6 +108,7 @@ class Ffmpeg < Formula
       --enable-frei0r
       --enable-libass
       --enable-avresample
+      --enable-demuxer=dash
       --disable-libjack
       --disable-indev=jack
     ]
@@ -122,7 +118,7 @@ class Ffmpeg < Formula
       args << "--enable-videotoolbox"
     end
 
-    args << "--disable-htmlpages" # doubtful anyone will look at this. The same info is accessible through the man pages.
+    args << "--disable-htmlpages" # The same info is accessible through the man pages.
     args << "--enable-chromaprint" if build.with? "chromaprint"
     args << "--enable-libbluray" if build.with? "libbluray"
     args << "--enable-libbs2b" if build.with? "libbs2b"
@@ -133,6 +129,7 @@ class Ffmpeg < Formula
     args << "--enable-libmodplug" if build.with? "libmodplug"
     args << "--enable-libopenh264" if build.with? "openh264"
     args << "--enable-libopenjpeg" if build.with? "openjpeg"
+    args << "--enable-librav1e" if build.with? "rav1e"
     args << "--enable-librsvg" if build.with? "librsvg"
     args << "--enable-librtmp" if build.with? "rtmpdump"
     args << "--enable-librubberband" if build.with? "rubberband"
@@ -162,9 +159,7 @@ class Ffmpeg < Formula
       args << "--extra-ldflags=-L#{HOMEBREW_PREFIX}/include"
     end
 
-    if build.with?("opencore-amr") || build.with?("libvmaf")
-      args << "--enable-version3"
-    end
+    args << "--enable-version3" if build.with?("opencore-amr") || build.with?("libvmaf")
 
     if build.with? "opencore-amr"
       args << "--enable-libopencore-amrnb"
@@ -177,7 +172,7 @@ class Ffmpeg < Formula
     # Build and install additional FFmpeg tools
     system "make", "alltools"
     bin.install Dir["tools/*"].select { |f| File.executable? f }
-    mv bin/"python", pkgshare/"python", :force => true
+    mv bin/"python", pkgshare/"python", force: true
 
     if build.with? "tesseract"
       opoo <<~EOS

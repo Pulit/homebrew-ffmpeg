@@ -2,19 +2,20 @@
 
 [![Build Status](https://travis-ci.com/homebrew-ffmpeg/homebrew-ffmpeg.svg?branch=master)](https://travis-ci.com/homebrew-ffmpeg/homebrew-ffmpeg)
 
-This is a 3<sup>rd</sup> party tap for [Homebrew](http://brew.sh/). It provides a formula for `ffmpeg` which includes options for enabling additional features and libraries.
+This is a 3<sup>rd</sup> party tap for [Homebrew](https://brew.sh/). It provides a formula for `ffmpeg` which includes options for enabling additional features and libraries.
 
 Contents:
 
 - [Installation and usage](#installation-and-usage)
 - [Updating](#updating)
 - [Included libraries](#included-libraries)
+- [Troubleshooting](#troubleshooting)
 - [Issues](#issues)
 - [Maintainers](#maintainers)
 
 ## Installation and usage
 
-In order to use this tap, you need to install Homebrew or Linuxbrew.
+In order to use this tap, you need to install Homebrew.
 
 Then, to run a default installation, run:
 
@@ -38,6 +39,14 @@ Then, you can run:
 ```
 brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-<option1> --with-<option2> ...
 ```
+
+If you **really** wish to install all the available options, you can run:
+
+```
+brew install homebrew-ffmpeg/ffmpeg/ffmpeg $(brew options homebrew-ffmpeg/ffmpeg/ffmpeg --compact)
+```
+
+Note that this may install libraries for which you need extra SDKs installed, such as `--with-decklink`, or libraries which have to be installed before running the formula, such as `--with-chromaprint`.
 
 ### Installing latest Git version (`HEAD`)
 
@@ -88,8 +97,8 @@ This formula features the following libraries optionally:
 
 | Dependency | Description | Remarks |
 | ---------- | ----------- | ------- |
-| `chromaprint` | Chromaprint audio fingerprinting library |
-| `decklink` | Enable DeckLink support | The DeckLink SDK has to be installed before running the FFmpeg formula. One possibility is to use:<br>```brew install amiaopensource/amiaos/decklinksdk```
+| `chromaprint` | Chromaprint audio fingerprinting library | See the workaround in the [Troubleshooting](#troubleshooting) section.
+| `decklink` | Enable DeckLink support | The DeckLink SDK has to be installed **before** running the FFmpeg formula. One possibility is to use:<br>```brew install amiaopensource/amiaos/decklinksdk```
 | `fdk-aac` | Fraunhofer FDK AAC library |
 | `game-music-emu` | game-music-emu support |
 | `libbluray` | libbluray support |
@@ -107,6 +116,7 @@ This formula features the following libraries optionally:
 | `openh264` | OpenH264 library |
 | `openjpeg` | JPEG 2000 image format |
 | `openssl` | SSL support |
+| `rav1e` | AV1 encoding via librav1e |
 | `rtmpdump` | rtmpdump support |
 | `rubberband` | rubberband library |
 | `speex` | speex support |
@@ -119,9 +129,26 @@ This formula features the following libraries optionally:
 | `zeromq` | libzeromq to receive commands sent through a libzeromq client |
 | `zimg` | z.lib zimg library |
 
+## Troubleshooting
+
+When installing a piece of SOFTWARE which is using this FFmpeg distribution, then you may get the following error:
+```
+==> Installing dependencies for SOFTWARE: ffmpeg
+Error: ffmpeg is already installed from homebrew-ffmpeg/ffmpeg!
+Please `brew uninstall ffmpeg` first."
+```
+
+Here is a workaround:
+```
+brew uninstall ffmpeg
+brew install SOFTWARE
+brew uninstall --ignore-dependencies ffmpeg
+brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-YOUR-OPTIONS
+```
+
 ## Issues
 
-To report issues, please [file an issue on GitHub](https://github.com/homebrew-ffmpeg/homebrew-ffmpeg/issues). Please note that we will only be able to help with issues that are exclusive to this tap.
+To report issues, please [file an issue on GitHub](https://github.com/homebrew-ffmpeg/homebrew-ffmpeg/issues). Please note that we will only be able to help with issues that are exclusive to this tap and for OS which are officially supported.
 
 If the problem is reproducible with the `homebrew-core` version of `ffmpeg`, please file it [on their tracker](https://github.com/Homebrew/homebrew-core/).
 
