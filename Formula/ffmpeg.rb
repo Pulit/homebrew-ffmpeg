@@ -85,11 +85,6 @@ class Ffmpeg < Formula
   uses_from_macos "bzip2"
   uses_from_macos "zlib"
 
-  resource "svtav1patch" do
-    url "https://github.com/OpenVisualCloud/SVT-AV1/raw/6da24e253445d21095058dadce14bbf758987d66/ffmpeg_plugin/0001-Add-ability-for-ffmpeg-to-run-svt-av1.patch"
-    sha256 "5e960b4dab495437082d0838a40a8cae9b67d1cef1ffd57da960afaa2bfd3719"
-  end
-
   def install
     args = %W[
       --prefix=#{prefix}
@@ -170,13 +165,6 @@ class Ffmpeg < Formula
       args << "--enable-libopencore-amrnb"
       args << "--enable-libopencore-amrwb"
     end
-
-    resource("svtav1patch").stage do |stage|
-      @patch_path = Dir.pwd
-      stage.staging.retain!
-    end
-    system "git", "apply", "#{@patch_path}/0001-Add-ability-for-ffmpeg-to-run-svt-av1.patch"
-    args << "--enable-libsvtav1"
 
     system "./configure", *args
     system "make", "install"
